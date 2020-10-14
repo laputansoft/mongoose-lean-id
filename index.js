@@ -60,9 +60,9 @@ function attachId(res) {
         return res;
       }
       if (res._id) {
-        var id = getter(v._id);
-        v.id = id;
-        v._id = id;
+        var id = getter(res._id);
+        res.id = id;
+        res._id = id;
       }
       Object.keys(res).map(k => {
         if (Array.isArray(res[k])) {
