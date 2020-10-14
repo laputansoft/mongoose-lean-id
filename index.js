@@ -1,10 +1,37 @@
 'use strict';
+const mongoose = require('mongoose');
 
 module.exports = function mongooseLeanId(schema) {
   schema.post('find', attachId);
   schema.post('findOne', attachId);
   schema.post('findOneAndUpdate', attachId);
 };
+
+function getter(binary) {
+  if (binary == null) return undefined;
+  if (!(binary instanceof mongoose.Types.Buffer.Binary)) return binary;
+
+  var len = binary.length();
+  var b = binary.read(0,len);
+  var buf = new Buffer(len);
+  var hex = '';
+
+  for (var i = 0; i < len; i++) {
+    buf[i] = b[i];
+  }
+
+  for (var i = 0; i < len; i++) {
+    var n = buf.readUInt8(i);
+
+    if (n < 16){
+      hex += '0' + n.toString(16);
+    } else {
+      hex += n.toString(16);
+    }
+  }
+
+  return hex.substr(0, 8) + '-' + hex.substr(8, 4) + '-' + hex.substr(12, 4) + '-' + hex.substr(16, 4) + '-' + hex.substr(20, 12);
+}
 
 function attachId(res) {
   if (res == null) {
@@ -18,7 +45,9 @@ function attachId(res) {
           return;
         }
         if (v._id) {
-          v.id = v._id.toString();
+          var id = getter(v._id);
+          v.id = id;
+          v._id = id;
         }
         Object.keys(v).map(k => {
           if (Array.isArray(v[k])) {
@@ -31,7 +60,9 @@ function attachId(res) {
         return res;
       }
       if (res._id) {
-        res.id = res._id.toString();
+        var id = getter(v._id);
+        v.id = id;
+        v._id = id;
       }
       Object.keys(res).map(k => {
         if (Array.isArray(res[k])) {
