@@ -40,14 +40,17 @@ function attachId(res) {
 
   function replaceId(res) {
     if (Array.isArray(res)) {
-      res.forEach(v => {
+      res.forEach((v, index) => {
         if (isObjectId(v)) {
           return;
         }
-        if (v._id) {
+        if (v._id && v._id instanceof mongoose.Types.Buffer.Binary) {
           var id = getter(v._id);
           v.id = id;
-          v._id = id;
+          // v._id = id;
+        } else if (v instanceof mongoose.Types.Buffer.Binary) {
+          var id = getter(v);
+          res[index] = id;
         }
         Object.keys(v).map(k => {
           if (Array.isArray(v[k])) {
@@ -59,10 +62,10 @@ function attachId(res) {
       if (isObjectId(res)) {
         return res;
       }
-      if (res._id) {
+      if (res._id && res._id instanceof mongoose.Types.Buffer.Binary) {
         var id = getter(res._id);
         res.id = id;
-        res._id = id;
+        // res._id = id;
       }
       Object.keys(res).map(k => {
         if (Array.isArray(res[k])) {
